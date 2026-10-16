@@ -1,0 +1,14 @@
+* text=auto
+*.py text eol=lf
+*.ts text eol=lf
+*.tsx text eol=lf
+*.css text eol=lf
+*.md text eol=lf
+*.ps1 text eol=crlf
+*.cmd text eol=crlf
+# 静态资料带源码指纹，保留原始字节，避免检出时换行转换使校验失效。
+frontend/public/** -text
+
+# 源码和知识索引按原始字节保存，保持版本指纹及证据校验一致。
+trunk/** -text
+resources/knowledge/** -text

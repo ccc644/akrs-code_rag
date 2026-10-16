@@ -1,0 +1,31 @@
+# 本机运行数据、依赖与临时输出不提交。
+/data/
+/output/
+/.tools/
+.venv/
+**/bin/
+**/obj/
+**/.vs/
+**/packages/
+**/__pycache__/
+**/.pytest_cache/
+**/.ruff_cache/
+**/node_modules/
+/frontend/dist/
+/frontend/dist-*/
+# 本地历史参考仓库不作为嵌套 Git 仓库提交。
+/其他模块/
+*.log
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
+*.private.json
+*.sqlite
+*.sqlite3
+*.sqlite3-*
+*.db
+*.db-*
+*.pfx
+*.p12
+*.key
