@@ -9,11 +9,12 @@ from app.agents.tools.guards import safe_source_tools, source_path
 from app.core.config import dump_json
 from app.modules.source_analysis.evidence import enclosing_excerpt, source_excerpt
 from app.modules.source_analysis.location import resolve_source_path
+from app.modules.source_analysis.python import PythonAnalysis
 from app.modules.source_analysis.reads import SourceRange, batch_source
 from app.modules.source_analysis.workspace import Workspace
 
 
-def source_tools(workspace: Workspace, evidence=None, progress=None):
+def source_tools(workspace: Workspace, evidence=None, progress=None, python_analysis=None):
     @tool
     async def read_source_batch(ranges: list[SourceRange]) -> str:
         """Read 1–12 source ranges in one call. Adjacent ranges are merged.
@@ -50,7 +51,7 @@ def source_tools(workspace: Workspace, evidence=None, progress=None):
 
     @tool
     async def read_source_context(path: str, line: int, max_lines: int = 160) -> str:
-        """Read the enclosing C# method/property and explicit numbered source near a line.
+        """Read the enclosing C# or Python symbol and numbered source near a line.
 
         complete_symbol=false means only part was read; request the rest if needed.
         """
@@ -80,6 +81,22 @@ def source_tools(workspace: Workspace, evidence=None, progress=None):
         """List C# syntax declarations and line ranges; does not perform semantic analysis."""
         return dump_json(await asyncio.to_thread(workspace.symbols, source_path(path)))
 
+    @tool
+    async def python_symbols(path: str) -> str:
+        """List Python modules, classes, functions, async functions and decorators via AST."""
+        analyzer = python_analysis or PythonAnalysis(workspace)
+        return dump_json(await asyncio.to_thread(analyzer.symbols, source_path(path)))
+
+    @tool
+    async def python_relations(path: str, line: int) -> str:
+        """Resolve Python imports, inheritance and conservative static call relations.
+
+        This never imports or executes the inspected project. Dynamic dispatch and calls
+        outside the workspace remain explicitly unresolved.
+        """
+        analyzer = python_analysis or PythonAnalysis(workspace)
+        return dump_json(await asyncio.to_thread(analyzer.relations, source_path(path), line))
+
     return safe_source_tools(
         [
             read_source,
@@ -89,5 +106,7 @@ def source_tools(workspace: Workspace, evidence=None, progress=None):
             search_source,
             find_source_files,
             csharp_symbols,
+            python_symbols,
+            python_relations,
         ]
     )

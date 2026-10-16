@@ -12,6 +12,8 @@ const labels: Record<string, string> = {
   find_source_files: '查找源码文件',
   csharp_symbols: '分析 C# 符号',
   csharp_relations: '核对 C# 调用关系',
+  python_symbols: '分析 Python 符号',
+  python_relations: '核对 Python 调用关系',
   recall_conversation: '查找历史对话',
   remember: '保存长期记忆',
   compact_conversation: '压缩对话上下文',

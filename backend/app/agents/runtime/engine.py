@@ -15,6 +15,7 @@ from app.modules.chat.repository import Repository
 from app.modules.knowledge.source_guides import ProjectKnowledge
 from app.modules.memory.service import MemoryService
 from app.modules.source_analysis.csharp import CSharpAnalysis
+from app.modules.source_analysis.python import PythonAnalysis
 from app.modules.source_analysis.workspace import Workspace
 
 
@@ -36,6 +37,7 @@ class AgentRuntime:
         self.mcp_cache = ToolCatalog(paths.data / "mcp-tools")
         self.knowledge = ProjectKnowledge(workspace)
         self.semantic = CSharpAnalysis(workspace)
+        self.python = PythonAnalysis(workspace)
 
     async def remote_tools(self, servers, emit):
         result = []

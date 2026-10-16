@@ -1,4 +1,4 @@
-"""源码读取、文本检索与 C# 语法符号；所有入口共享根目录边界。"""
+"""源码读取、文本检索与多语言语法符号；所有入口共享根目录边界。"""
 
 import base64
 import fnmatch
@@ -217,6 +217,10 @@ class Workspace:
 
     def symbols(self, path: str) -> dict:
         source = self.read(path)
+        if path.lower().endswith(".py"):
+            from app.modules.source_analysis.python import PythonAnalysis
+
+            return PythonAnalysis(self).symbols(path)
         if not path.lower().endswith(".cs"):
             return {"symbols": [], "version": source["version"]}
         parsed = self.symbol_cache.get_or_create(

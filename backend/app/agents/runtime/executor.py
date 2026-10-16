@@ -100,10 +100,16 @@ class AgentRunExecutor:
                 )
             if message["selections"] and available > 10000:
                 selection = message["selections"][0]
-                if selection["path"].lower().endswith(".cs"):
+                language = selection["path"].lower()
+                if language.endswith((".cs", ".py")):
                     try:
+                        analyzer = runtime.semantic if language.endswith(".cs") else runtime.python
                         relations = await asyncio.to_thread(
-                            runtime.semantic.analyze, selection["path"], selection["start_line"]
+                            analyzer.analyze
+                            if hasattr(analyzer, "analyze")
+                            else analyzer.relations,
+                            selection["path"],
+                            selection["start_line"],
                         )
                         from app.agents.context.tokens import fit_text
                         from app.core.config import dump_json

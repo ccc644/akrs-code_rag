@@ -58,7 +58,7 @@ export function WorkspaceSearch({ onClose }: { onClose: () => void }) {
             value={glob}
             maxLength={120}
             onChange={(event) => setGlob(event.target.value)}
-            placeholder="*.cs 或 Module/**"
+            placeholder="*.cs、*.py 或 Module/**"
           />
         </label>
         <ErrorText error={results.error} />
