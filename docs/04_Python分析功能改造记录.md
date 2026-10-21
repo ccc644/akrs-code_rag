@@ -1,88 +1,85 @@
-# Python 分析功能改造记录
+# Python 分析系统改造记录
+
+更新日期：2026-10-19。
 
 ## 1. 改造目标
 
-原系统的通用源码读取和搜索并不要求文件必须是 C#，但符号解析在 `Workspace.symbols` 中只对 `.cs` 调用 Roslyn helper，执行器也只会为 `.cs` 自动准备语义关系。因此，仅把后缀判断改成 `.py` 会得到“能读文本、不能理解结构”的假支持。
+原系统以 C# 为主要被分析语言，符号与关系分析依赖 Roslyn helper；Python 只作为补充路径。本次将系统整体切换为 Python 源码分析：
 
-本次改造保留了 C# Roslyn 路径，增加 Python 静态结构和关系分析，并将其接入 Agent 工具和选区上下文。没有改写后端语言，也没有执行任何业务 Python 源码。
+1. 移除 C#/Roslyn 和 tree-sitter-c-sharp 依赖，Python AST 成为唯一的一等分析路径。
+2. 把 `trunk/` 中的 C# 业务工程替换为 SWE-agent（NeurIPS 2024，CCF-A）的 Python 源码快照，放在 `trunk/swe-agent/`，作为默认被分析项目；`trunk/` 作为集中放置多个项目的源码大目录。
+3. 同步更新提示词、工具标签、知识资料、测试和文档，避免残留“C# 主路径”的描述。
 
-## 2. 修改文件
+## 2. 被分析源码
+
+`trunk/swe-agent/` 现在是 SWE-agent 的只读快照：
+
+- 上游：`https://github.com/SWE-agent/SWE-agent`
+- 提交：`3ea751c087f32b16e039a2233dd6eefecef325d5`
+- 许可证：MIT
+- 范围：`sweagent/`、`tests/`、`tools/`、`config/`、`docs/` 等；未包含 `.git` 历史和示例轨迹数据。
+
+`trunk/` 用作集中放置被分析项目的大目录，每个子目录是一个独立项目。默认项目指向 `trunk/swe-agent`；新仓库放到 `trunk/<项目名>`，再在应用内新建项目并关联该子目录。
+
+上游说明单独记录在 `trunk/UPSTREAM.md`。源码目录保持只读，应用不会修改或执行其中的业务代码。
+
+## 3. 后端修改
 
 | 文件 | 修改 |
 | --- | --- |
-| `backend/app/modules/source_analysis/python.py` | 新增 Python AST 分析器、模块路径解析、符号、导入、继承、调用和调用者关系 |
-| `backend/app/modules/source_analysis/workspace.py` | `.py` 符号请求转给 `PythonAnalysis`，C# 行为保持原路径 |
-| `backend/app/agents/tools/source.py` | 增加 `python_symbols` 和 `python_relations` 工具，并允许注入分析器 |
-| `backend/app/agents/runtime/engine.py` | 为每个运行时装配 `PythonAnalysis` |
-| `backend/app/agents/runtime/graph_builder.py` | 将 Python 分析器提供给源码工具集合 |
-| `backend/app/agents/runtime/executor.py` | 选中 `.py` 时自动准备 Python 关系上下文，`.cs` 仍使用 Roslyn |
-| `backend/app/agents/prompts/system.py` | 补充 Python 工具和动态行为未知边界 |
-| `backend/app/modules/source_analysis/evidence.py` | 源码问题识别同时覆盖 `.cs` 和 `.py` |
-| `frontend/src/features/chat/lib/toolLabels.ts` | 显示两个 Python 工具的中文名称 |
-| `frontend/src/features/source_reader/components/WorkspaceSearch.tsx` | 搜索范围提示同时举例 `.cs` 和 `.py` |
-| `backend/tests/unit/source_analysis/test_python_analysis.py` | 新增确定性测试 |
+| `backend/app/modules/source_analysis/csharp.py` | 删除 Roslyn 服务、C# 项目和调用关系分析 |
+| `backend/app/modules/source_analysis/symbol_parser.py` | 删除 tree-sitter-c-sharp 备用解析器 |
+| `backend/app/modules/source_analysis/setup.py` | 删除 .NET/Roslyn 安装准备 |
+| `backend/tools/SourceAnalysis/` | 删除 Roslyn helper 工程 |
+| `backend/app/modules/source_analysis/workspace.py` | 只把 `.py` 分派给 PythonAnalysis；其他后缀返回 `analysis: unsupported` |
+| `backend/app/modules/source_analysis/collection.py` | 移除 ProjectAnalysis 和 CSharpAnalysis 依赖，多目录项目直接复用 PythonAnalysis |
+| `backend/app/agents/tools/source.py` | 移除 `csharp_symbols`，保留 `python_symbols`、`python_relations` |
+| `backend/app/agents/runtime/engine.py` | 删除 `CSharpAnalysis` 装配 |
+| `backend/app/agents/runtime/graph_builder.py` | 不再注册 C# 关系工具 |
+| `backend/app/agents/runtime/executor.py` | 只在选中 `.py` 时预取 Python 关系 |
+| `backend/app/agents/analysis/retrieval_budget.py` | 复核工具集合改为 `python_relations` |
+| `backend/app/agents/prompts/system.py` | 提示词改为 Python-only，说明 AST 的保守边界 |
+| `backend/app/modules/source_analysis/evidence.py` | 源码问题识别只匹配 `.py` |
+| `backend/pyproject.toml` / `uv.lock` | 移除 `tree-sitter` 与 `tree-sitter-c-sharp` |
+| `backend/app/core/config.py` | 默认工作区根目录改为 `trunk/swe-agent` |
+| `frontend/scripts/knowledge/check-source-guides.mjs` | 知识资料校验根目录改为 `trunk/swe-agent` |
+| `scripts/dev/Setup.ps1` | 不再准备 Roslyn 工具 |
 
-## 3. 静态分析模型
+## 4. Python 静态分析模型
 
-### 3.1 符号
+`PythonAnalysis` 继续使用标准库 `ast.parse`：
 
-`PythonAnalysis.symbols(path)` 通过 `ast.parse` 构建语法树，再访问：
+- 符号：类、函数、异步函数、类方法、装饰器、参数、基类和限定名。
+- 导入：`import`、`from ... import ...`，工作区内按模块路径解析相对导入。
+- 关系：同文件名称匹配的调用候选、工作区内同名调用者扫描、继承基类；导入目标只定位到文件。
+- 语法错误返回 `syntax_error` 和行列信息，不执行文件、不导入依赖。
+- 动态导入、`getattr`、猴子补丁、装饰器替换、运行时多态和外部包内部实现保持未知。
 
-- `ClassDef`：类名、限定名、行范围、装饰器和基类。
-- `FunctionDef` / `AsyncFunctionDef`：函数或类方法、异步标记、装饰器、参数和行范围。
-- 嵌套定义：使用 `qualname` 保留外层类或函数关系。
+## 5. 前端与知识资料
 
-返回结果包含 `analysis: "ast"`、文件版本和 `has_syntax_errors`。空文件返回空符号；语法错误返回错误行列和 `syntax_error`，不会尝试执行或导入。
+- `toolLabels.ts` 移除 C# 工具名称。
+- `WorkspaceSearch`、`SourceImport` 的示例与可导入后缀改为 Python。
+- `resources/knowledge/flows` 和原 AKRS 模块索引已移除；`resources/knowledge/modules/manifest.json` 替换为空的 SWE-agent 清单。
+- `sourceGuides.ts` 改为一个 SWE-agent 源码说明专题，覆盖命令行入口、单实例运行、Agent 步进循环和工具边界。
+- `source-evidence.json` 为 9 段人工选定源码范围，保存 SHA-256 与精确片段；`npm run knowledge:source-check` 会核对 trunk 是否变化。
+- `presentation.ts`、`archifyData.ts`、`diagramReading.ts` 清空 AKRS 专属图谱数据，等待按新源码重新复核后补充。
 
-### 3.2 导入
+## 6. 验证
 
-顶层 `import x` 和 `from x import y` 会记录模块、名称、别名和行号。对于工作区内的 `.py` 文件，分析器按相对路径建立模块映射，尝试解析相对导入。例如 `pkg/service.py` 中的 `from .helpers import normalize` 可以定位到 `pkg/helpers.py`。
+本次实际执行：
 
-“能定位模块文件”不等于“已经完成 Python 类型绑定”。别名重写、`__all__`、条件导入、安装包和动态导入仍可能改变真实行为，因此结果保留静态范围声明。
+- `uv lock`：移除 tree-sitter 依赖后重新解析。
+- 后端源码分析相关测试：34 通过、1 跳过（Windows 符号链接权限）。
+- 前端 `npx tsc -b`：通过。
+- 前端 `npm test`：190 通过。
+- 前端 `npm run build`：通过（包含知识资料校验和 Agent 索引生成）。
+- 知识资料检查：1 个专题、3 条流程、9 个节点、16 条说明，9 个文件 / 9 段依据与 trunk 一致。
 
-### 3.3 调用和调用者
+尚未执行：真实模型供应商的在线问答验收、完整后端全量测试的历史对比、SWE-agent 业务项目自身的执行或测试。
 
-`ast.Call` 记录调用文本和行号。对同一文件中按名称可匹配的函数，结果给出 `resolved: true` 和目标符号；导入目标只在 `imports.resolved_path` 中给出文件级定位。扫描工作区的 Python 文件，可以找出名称相同的潜在调用者。
+## 7. 边界
 
-这是保守的候选关系，不是完整的调用图。以下情况明确保持未知：多态分派、实例属性实际类型、装饰器替换、猴子补丁、`getattr`/`eval`、动态导入、C 扩展和外部包内部实现。
-
-### 3.4 安全边界
-
-分析器没有 `exec`、`eval`、`importlib`、子进程或项目安装步骤。它只读取 `Workspace` 已经允许的文本文件，且继承现有的路径、大小、编码和符号链接边界。
-
-## 4. 典型输入和结果
-
-```python
-from .helpers import normalize
-
-class Service(BaseService):
-    @staticmethod
-    async def build(value: str):
-        return normalize(value)
-```
-
-符号结果会包含 `Service`、`Service.build`、`async: true`、`staticmethod`、`BaseService` 和参数 `value`；导入结果会记录 `.helpers` 和 `normalize`；关系结果会把 `normalize(value)` 作为调用候选，并说明这是 AST/名称匹配。
-
-## 5. 测试设计
-
-测试文件为 `backend/tests/unit/source_analysis/test_python_analysis.py`，覆盖：
-
-- 简单类、继承、装饰器和异步方法。
-- 相对导入和多个 Python 模块。
-- 本文件内函数调用和调用者扫描。
-- 语法错误只返回结构化错误，不执行目标文件。
-
-执行命令：
-
-```powershell
-Set-Location backend
-.\.venv\Scripts\python.exe -m pytest -q tests/unit/source_analysis/test_python_analysis.py
-```
-
-本次实际结果：**3 个新增测试通过**。同时复跑了源码工作区相关集成测试：**17 个通过，1 个 Windows 符号链接权限跳过**。
-
-## 6. 功能差异
-
-改造前，Python 文件可以被读取和全文搜索，但 `Workspace.symbols` 返回空符号，选中 `.py` 不会自动生成关系上下文。改造后，Python 文件具有 AST 符号和关系工具，选区会进入与 C# 类似的静态关系预取路径。
-
-还没有实现的能力包括：跨包完整类型推断、第三方库 API 语义、运行时调用覆盖、执行测试来验证目标项目行为，以及 Python 专用的复杂代码质量规则。这些应该在有明确需求和测试样例后逐步增加。
+- 静态关系只代表源码中可推断的候选关系，不是完整调用图或类型系统。
+- 源码工作区只读，不执行被分析的 Python 项目。
+- 知识图谱和模块索引当前为空，不能把“已建立空清单”描述成“已完成全项目理解”。
+- 原有 ARKS 设备业务资料不再随本次快照分发。

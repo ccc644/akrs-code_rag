@@ -20,9 +20,9 @@
 | 向量数据库 | 使用 SQLite 缓存向量，未采用独立向量服务 | NumPy 负责精确相似度计算；当前没有独立向量数据库或 ANN 索引 |
 | 结构化输出 | 部分实现 | 关系工具返回 JSON，模型设置探测和部分复核要求结构化 JSON；普通回答仍是文本 |
 | 长期记忆 | 已实现 | `modules/memory` 保存项目事实和用户偏好，并有 stale、冲突、来源和恢复状态 |
-| 失败重试与降级 | 已实现 | 队列恢复、模型错误转译、MCP 降级、Roslyn 缺失时明确返回 unavailable/unknown |
+| 失败重试与降级 | 已实现 | 队列恢复、模型错误转译、MCP 降级；Python 语法错误明确返回 syntax_error |
 | 多 Agent | 未实现 | `create_deep_agent(..., subagents=[])`，当前是单图执行 |
-| 执行未知业务源码 | 明确禁止 | `SourceBackend.write/edit/delete` 只读；C# 和 Python 都采用静态分析 |
+| 执行未知业务源码 | 明确禁止 | `SourceBackend.write/edit/delete` 只读；Python 只做 AST 静态分析 |
 
 ## 3. Tool Calling 是怎么发生的
 
@@ -31,10 +31,9 @@
 主要本地工具包括：
 
 - `read_source`：读取显式行号并返回版本。
-- `read_source_context`：读取 C# 符号或 Python 符号附近的上下文。
+- `read_source_context`：读取 Python 符号附近的上下文。
 - `read_source_batch`：合并相邻范围，控制行数和 token 预算。
 - `search_source`、`find_source_files`：检索内容和路径。
-- `csharp_symbols`、`csharp_relations`：C# 语法和 Roslyn 语义分析。
 - `python_symbols`、`python_relations`：Python AST 符号和保守关系分析。
 - 记忆、知识、调试记录和对话历史工具：由对应模块在图构建时加入。
 
@@ -69,7 +68,7 @@
 - 路径边界：`Workspace.resolve` 拒绝绝对路径、`..`、符号链接越界和生成目录。
 - 版本边界：读取结果带 SHA-256；选区在发送前重新核对，旧选区会标记 stale。
 - 证据边界：回答中的源码链接要经过覆盖检查；无法覆盖的链接会被降级。
-- 语义边界：Roslyn 缺依赖时返回 unknown/partial；Python 动态行为在结果中明确说明未知。
+- 语义边界：Python 动态行为在结果中明确说明未知。
 - 上下文边界：批量读取限制范围，重复工具正文可压缩，超出预算时列出 remaining 而不是假装读完。
 - 数据边界：源码工具只读，禁止通过 Agent 修改或执行业务源码。
 
@@ -77,6 +76,6 @@
 
 可以这样描述：
 
-> 我独立负责的是一个面向源码理解与调试知识复用的 AI 应用。系统使用 Deep Agents/LangGraph 组织单 Agent 工具调用，资料侧使用本地多语言 Embedding 与关键词、领域同义词和标题加权做混合检索；历史调试经验另外核对设备、版本和工况。Agent 可以继续调用检索与源码读取工具补齐证据，回答通过源码版本、行号覆盖校验和结论复核。C# 采用 Roslyn，Python 采用 AST 静态分析；长对话通过上下文预算、摘要、历史回查、checkpoint 和长期记忆管理。
+> 我独立负责的是一个面向源码理解与调试知识复用的 AI 应用。系统使用 Deep Agents/LangGraph 组织单 Agent 工具调用，资料侧使用本地多语言 Embedding 与关键词、领域同义词和标题加权做混合检索；历史调试经验另外核对设备、版本和工况。Agent 可以继续调用检索与源码读取工具补齐证据，回答通过源码版本、行号覆盖校验和结论复核。当前被分析源码统一使用 Python AST 静态分析；长对话通过上下文预算、摘要、历史回查、checkpoint 和长期记忆管理。
 
 不要说：系统“自动理解了全部代码”“通过 Agent 自动运行 Python”“使用了多 Agent 协作”或“所有检索都由向量数据库完成”。这些说法超出当前代码证据。
