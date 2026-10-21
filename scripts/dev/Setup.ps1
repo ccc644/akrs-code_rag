@@ -1,4 +1,4 @@
-param([switch]$SkipFrontend, [switch]$SkipSemanticModels)
+﻿param([switch]$SkipFrontend, [switch]$SkipSemanticModels)
 $ErrorActionPreference = 'Stop'
 $env:PYTHONUTF8 = '1'
 $projectDirectory = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
