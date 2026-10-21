@@ -299,14 +299,14 @@ def test_device_acceptance_cannot_use_release_checks_and_archived_proof(services
         store = HandoverStore(app.state.projects)
         source = client.post(
             "/api/handover/sources/capture",
-            json={"path": "Program.cs", "actor": "验收人员", "source_project_id": project},
+            json={"path": "Program.py", "actor": "验收人员", "source_project_id": project},
         ).json()
         base = store.create(
             "baseline",
             "测试基线",
             {
                 "source_id": source["id"],
-                "source_scope": "Program.cs",
+                "source_scope": "Program.py",
                 "software_version": "QA1",
                 "device": "虚构台架",
                 "build": "离线检查",

@@ -69,7 +69,6 @@ class AgentGraphBuilder:
             artifacts_root=f"/threads/{thread_id}",
         )
         tools = source_tools(runtime.workspace, evidence, progress, runtime.python)
-        tools += runtime.semantic.tools()
         tools += conversation_tools(
             runtime.repository,
             runtime.memories,

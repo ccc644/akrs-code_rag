@@ -62,8 +62,8 @@ async def check_tools(model):
 
 async def check_summary(model):
     reply = await model.ainvoke(
-        "将以下对话压缩为目标、结论、待办三项：用户要求解释 Program.cs；"
-        "助手确认 Main 是入口；下一步读取 FrmMain.cs。只输出简短摘要。"
+        "将以下对话压缩为目标、结论、待办三项：用户要求解释 sweagent/run/run.py；"
+        "助手确认 main 是入口；下一步读取 agents.py。只输出简短摘要。"
     )
     if not reply.text.strip():
         raise ValueError("压缩模型返回了空摘要")

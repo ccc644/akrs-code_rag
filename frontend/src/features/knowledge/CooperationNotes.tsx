@@ -44,7 +44,7 @@ function SignalEvidence({ signal }: { signal: SignalDefinition }) {
       </summary>
       <p>{signalGuides[signal.name].description}</p>
       <p>
-        复位方式：{signal.resetMode ?? '未登记'} · 声明：{signal.declarationPath ?? 'SignalPool.cs'}
+        复位方式：{signal.resetMode ?? '未登记'} · 声明：{signal.declarationPath ?? 'signal_pool.py'}
         :{signal.declarationLine ?? '—'}
       </p>
       {signal.references.length ? (

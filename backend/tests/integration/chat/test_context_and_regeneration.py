@@ -30,7 +30,7 @@ async def test_regenerate_keeps_original_question_and_reply_versions(services, m
     runtime = AgentRuntime(paths, settings, workspace, repository, memories)
     thread = repository.create_thread("重新生成")
     selection = {
-        "path": "Program.cs",
+        "path": "Program.py",
         "start_line": 1,
         "end_line": 2,
         "content": "独立选区快照",

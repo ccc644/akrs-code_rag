@@ -51,7 +51,7 @@ def source_tools(workspace: Workspace, evidence=None, progress=None, python_anal
 
     @tool
     async def read_source_context(path: str, line: int, max_lines: int = 160) -> str:
-        """Read the enclosing C# or Python symbol and numbered source near a line.
+        """Read the enclosing Python symbol and numbered source near a line.
 
         complete_symbol=false means only part was read; request the rest if needed.
         """
@@ -77,11 +77,6 @@ def source_tools(workspace: Workspace, evidence=None, progress=None, python_anal
         return dump_json(await asyncio.to_thread(workspace.find_files, query))
 
     @tool
-    async def csharp_symbols(path: str) -> str:
-        """List C# syntax declarations and line ranges; does not perform semantic analysis."""
-        return dump_json(await asyncio.to_thread(workspace.symbols, source_path(path)))
-
-    @tool
     async def python_symbols(path: str) -> str:
         """List Python modules, classes, functions, async functions and decorators via AST."""
         analyzer = python_analysis or PythonAnalysis(workspace)
@@ -105,7 +100,6 @@ def source_tools(workspace: Workspace, evidence=None, progress=None, python_anal
             plan_source_checks,
             search_source,
             find_source_files,
-            csharp_symbols,
             python_symbols,
             python_relations,
         ]

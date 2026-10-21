@@ -111,7 +111,7 @@ export function ProjectEditor({ project, onClose }: { project?: Project; onClose
               maxLength={120}
               value={name}
               onChange={(event) => setName(event.target.value)}
-              placeholder="例如：ZX2200 软件分析"
+              placeholder="例如：SWE-agent 源码分析"
             />
           </label>
           <label>
@@ -131,7 +131,7 @@ export function ProjectEditor({ project, onClose }: { project?: Project; onClose
               readOnly={!canConfigureSource}
               maxLength={1024}
               onChange={(event) => setRoot(event.target.value)}
-              placeholder={'本机目录，如 D:\\projects\\ZX2200'}
+              placeholder={'本机绝对目录，如 D:\\vscode\\dsh\\akrs\\ARKS-Assistant-master\\trunk\\sglang'}
             />
           </label>
           {!!sourceChoices.length && (
@@ -159,7 +159,7 @@ export function ProjectEditor({ project, onClose }: { project?: Project; onClose
           <p className="muted form-hint">
             {canConfigureSource
               ? '可以先创建空项目，之后再关联源码目录。'
-              : '自动关联公司 ZX2200 源码，项目和对话仅自己可见。'}
+              : '自动使用默认源码目录；项目和对话仅自己可见。如需指定其他目录，请使用管理员账号。'}
           </p>
           {folders.map((folder, index) => (
             <div className="source-folder-fields" key={index}>

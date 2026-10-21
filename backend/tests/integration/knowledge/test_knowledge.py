@@ -3,11 +3,11 @@ from app.modules.knowledge.router import SnapshotFile, check_files
 
 def test_snapshot_check_detects_changes_and_missing_files(services):
     workspace = services[2]
-    version = workspace.read("Program.cs")["version"]
+    version = workspace.read("Program.py")["version"]
     files = [
-        SnapshotFile(id="same", path="Program.cs", sha256=version),
-        SnapshotFile(id="changed", path="Program.cs", sha256="0" * 64),
-        SnapshotFile(id="missing", path="Missing.cs", sha256=version),
+        SnapshotFile(id="same", path="Program.py", sha256=version),
+        SnapshotFile(id="changed", path="Program.py", sha256="0" * 64),
+        SnapshotFile(id="missing", path="Missing.py", sha256=version),
     ]
     result = check_files(workspace, files)
     assert result["same"] == {"status": "match", "version": version}
@@ -33,8 +33,8 @@ def test_snapshot_check_keeps_workspace_boundary(services):
 
 def test_snapshot_check_hashes_original_encoded_bytes(services):
     workspace = services[2]
-    target = workspace.root / "Encoded.cs"
+    target = workspace.root / "Encoded.py"
     target.write_bytes("class 中文 {}\r\n".encode("utf-16"))
-    version = workspace.read("Encoded.cs")["version"]
-    snapshot = SnapshotFile(id="utf16", path="Encoded.cs", sha256=version)
+    version = workspace.read("Encoded.py")["version"]
+    snapshot = SnapshotFile(id="utf16", path="Encoded.py", sha256=version)
     assert check_files(workspace, [snapshot])["utf16"]["status"] == "match"

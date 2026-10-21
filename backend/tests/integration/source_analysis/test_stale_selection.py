@@ -5,7 +5,7 @@ def test_historical_selection_reaches_model_with_version_and_warning(services):
     paths, _, workspace, repository, memories, settings = services
     runtime = AgentRuntime(paths, settings, workspace, repository, memories)
     selection = {
-        "path": "Program.cs",
+        "path": "Program.py",
         "start_line": 1,
         "end_line": 2,
         "version": "a" * 64,

@@ -48,7 +48,7 @@ async def test_pending_project_fact_and_failed_path_have_honest_feedback(service
     assert result["saved"] is False
     assert "尚未保存" in events[-1][1]["text"]
     failed = await tool.ainvoke(
-        {"name": "错误来源.md", "content": "错误来源", "source_paths": ["../private.cs"]}
+        {"name": "错误来源.md", "content": "错误来源", "source_paths": ["../private.py"]}
     )
     assert "未完成" in failed
     assert events[-1][1]["status"] == "not_saved"
@@ -92,7 +92,7 @@ async def test_source_filename_cannot_authorize_memory_save(services, monkeypatc
         None,
         lambda *_: None,
         inspection=True,
-        memory_query="解释这个函数\n记住.cs",
+        memory_query="解释这个函数\n记住.py",
         question_text="解释这个函数",
     )
     tool = next(item for item in graph["tools"] if item.name == "remember")

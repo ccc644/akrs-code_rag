@@ -89,7 +89,7 @@ async def test_fork_uses_chosen_version_and_only_history_before_cursor(services,
     )
     thread = repository.create_thread("父会话")
     selection = {
-        "path": "Program.cs",
+        "path": "Program.py",
         "content": "分支选区",
         "version": "a" * 64,
         "start_line": 1,
@@ -265,11 +265,11 @@ def test_recovery_pauses_durable_queue_and_revalidates_waiting_selection(service
     thread = repository.create_thread("恢复队列")
     run = repository.create_run(thread["id"], "中断的运行", [])
     selection = {
-        "path": "Program.cs",
+        "path": "Program.py",
         "start_line": 1,
         "end_line": 2,
         "content": "旧源码",
-        "version": workspace.read("Program.cs")["version"],
+        "version": workspace.read("Program.py")["version"],
         "stale": False,
     }
     item = repository.queue.add(thread["id"], "等待的提问", [selection])
@@ -279,7 +279,7 @@ def test_recovery_pauses_durable_queue_and_revalidates_waiting_selection(service
         repository.queue.list(thread["id"])["paused"]
         and repository.queue.dispatch(thread["id"]) is None
     )
-    (workspace.root / "Program.cs").write_text("源码已经变化", encoding="utf-8")
+    (workspace.root / "Program.py").write_text("源码已经变化", encoding="utf-8")
     runtime = AgentRuntime(paths, settings, workspace, repository, memories)
     message = runtime.current_input(
         {"id": item["id"], "content": item["content"], "selections": [selection]}
@@ -385,7 +385,7 @@ async def test_runtime_stage_tracks_real_source_and_wiki_tool_rounds(services, m
     def generate(_self, messages, *_a, **_kw):
         last = messages[-1]
         if getattr(last, "name", "") == "mcp_wiki_lookup":
-            answer = AIMessage(content="核对完成。[Program.cs:2](source:Program.cs#L2)")
+            answer = AIMessage(content="核对完成。[Program.py:2](source:Program.py#L2)")
         elif getattr(last, "name", "") == "read_source":
             answer = AIMessage(
                 content="查阅架构",
@@ -395,7 +395,7 @@ async def test_runtime_stage_tracks_real_source_and_wiki_tool_rounds(services, m
             answer = AIMessage(
                 content="开始读取",
                 tool_calls=[
-                    {"name": "read_source", "args": {"path": "Program.cs"}, "id": "source"}
+                    {"name": "read_source", "args": {"path": "Program.py"}, "id": "source"}
                 ],
             )
         return ChatResult(generations=[ChatGeneration(message=answer)])
@@ -414,7 +414,7 @@ async def test_runtime_stage_tracks_real_source_and_wiki_tool_rounds(services, m
     events = []
     answer = await runtime.execute(run, lambda *event: events.append(event))
     stages = [payload["stage"] for kind, payload in events if kind == "stage"]
-    assert answer.startswith("核对完成。[Program.cs:2](source:Program.cs#L2)")
+    assert answer.startswith("核对完成。[Program.py:2](source:Program.py#L2)")
     assert stages[:2] == ["connecting_model", "connecting_mcp"]
     assert "reading_source" in stages and "reading_wiki" in stages
     assert stages.count("generating") == 3 and stages[-1] == "checking_sources"

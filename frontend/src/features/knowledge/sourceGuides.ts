@@ -1,10 +1,5 @@
 import evidenceData from './data/source-evidence.json' with { type: 'json' };
-import { startupGuide } from './reviews/startup.ts';
-import { recoveryGuide } from './reviews/recovery.ts';
-import { transportGuide } from './reviews/transport.ts';
-import { s1Guide } from './reviews/s1.ts';
-import { s2Guide } from './reviews/s2.ts';
-import { waferGuide } from './reviews/wafer.ts';
+import { sweAgentGuide } from './reviews/sweagent.ts';
 
 export interface SourceClaim {
   text: string;
@@ -50,14 +45,7 @@ export const sourceEvidence = evidenceData as {
   ranges: Record<string, EvidenceRange>;
   diagrams: Record<string, { path: string; sha256: string }>;
 };
-export const sourceGuides: SourceGuide[] = [
-  startupGuide,
-  recoveryGuide,
-  transportGuide,
-  s1Guide,
-  s2Guide,
-  waferGuide,
-];
+export const sourceGuides: SourceGuide[] = [sweAgentGuide];
 export const sourceReviewVersion = Object.values(sourceEvidence.sources)
   .map((file) => file.sha256)
   .join(':');

@@ -49,10 +49,10 @@ def test_search_matches_body_selection_path_and_literal_wildcards(services):
     run = repository.create_run(
         thread["id"],
         "正文标记 a%b",
-        [{"path": "Module/Hidden.cs", "content": "void SelectionOnly() {}"}],
+        [{"path": "Module/Hidden.py", "content": "void SelectionOnly() {}"}],
     )
     repository.finish(run["id"], "解释结果")
-    for query in ("正文标记", "SelectionOnly", "Hidden.cs", "a%b"):
+    for query in ("正文标记", "SelectionOnly", "Hidden.py", "a%b"):
         rows = repository.threads(query=query)
         assert rows[0]["matched_message_id"] == run["message_id"]
         assert query in rows[0]["snippet"]

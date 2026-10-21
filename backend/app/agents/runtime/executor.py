@@ -101,13 +101,11 @@ class AgentRunExecutor:
             if message["selections"] and available > 10000:
                 selection = message["selections"][0]
                 language = selection["path"].lower()
-                if language.endswith((".cs", ".py")):
+                if language.endswith(".py"):
                     try:
-                        analyzer = runtime.semantic if language.endswith(".cs") else runtime.python
+                        analyzer = runtime.python
                         relations = await asyncio.to_thread(
-                            analyzer.analyze
-                            if hasattr(analyzer, "analyze")
-                            else analyzer.relations,
+                            analyzer.relations,
                             selection["path"],
                             selection["start_line"],
                         )

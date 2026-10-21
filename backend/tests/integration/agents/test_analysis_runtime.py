@@ -30,13 +30,13 @@ class TruncatedSourceModel(DeterministicModel):
                         {
                             "id": f"read-{len(reads)}",
                             "name": "read_source",
-                            "args": {"path": "Program.cs", "start_line": 1, "end_line": 3},
+                            "args": {"path": "Program.py", "start_line": 1, "end_line": 3},
                         }
                     ],
                 )
             else:
                 answer = AIMessage(
-                    content="入口有实现。[源码](source:Program.cs#L1-L3)\n进度",
+                    content="入口有实现。[源码](source:Program.py#L1-L3)\n进度",
                     response_metadata={"stop_reason": "max_tokens"},
                 )
         return ChatResult(generations=[ChatGeneration(message=answer)])
@@ -70,7 +70,6 @@ async def test_graph_continuation_cache_final_validation_and_persisted_status(
         event["kind"] == "provider_usage" and event["payload"].get("stop_reason") == "max_tokens"
         for event in repository.events(run["id"])
     )
-    runtime.semantic.close()
 
 
 class BudgetSequenceModel(DeterministicModel):
@@ -87,13 +86,13 @@ class BudgetSequenceModel(DeterministicModel):
                         {
                             "id": f"r-{start}",
                             "name": "read_source",
-                            "args": {"path": "Long.cs", "start_line": start, "end_line": start},
+                            "args": {"path": "Long.py", "start_line": start, "end_line": start},
                         }
                     ],
                 )
             else:
                 answer = AIMessage(
-                    content="仅核查前八行。[已读](source:Long.cs#L1-L8)",
+                    content="仅核查前八行。[已读](source:Long.py#L1-L8)",
                     response_metadata={"finish_reason": "stop"},
                 )
         return ChatResult(generations=[ChatGeneration(message=answer)])
@@ -116,7 +115,7 @@ class BatchVisibleModel(DeterministicModel):
                         "id": "batch-large",
                         "name": "read_source_batch",
                         "args": {
-                            "ranges": [{"path": "Batch.cs", "start_line": 1, "end_line": 300}]
+                            "ranges": [{"path": "Batch.py", "start_line": 1, "end_line": 300}]
                         },
                     }
                 ],
@@ -126,7 +125,7 @@ class BatchVisibleModel(DeterministicModel):
 
 async def test_bounded_batch_is_not_evicted_to_single_line_scratch_file(services, monkeypatch):
     paths, _, workspace, repository, memory, settings = services
-    (workspace.root / "Batch.cs").write_text(
+    (workspace.root / "Batch.py").write_text(
         "\n".join("// " + "source-visible " * 2 for _ in range(300))
     )
     monkeypatch.setattr(
@@ -137,7 +136,6 @@ async def test_bounded_batch_is_not_evicted_to_single_line_scratch_file(services
     run = repository.create_run(None, "验收批量工具", [], {"use_knowledge": False})
     answer = await runtime.execute(run, lambda *_: None)
     assert answer == "批量正文直接可读。"
-    runtime.semantic.close()
 
 
 async def test_partial_run_keeps_pending_target_and_continue_reuses_evidence(services, monkeypatch):
@@ -146,7 +144,7 @@ async def test_partial_run_keeps_pending_target_and_continue_reuses_evidence(ser
     configured.analysis.standard_calls = 8
     configured.analysis.verification_reserve = 2
     settings.save(configured)
-    (workspace.root / "Long.cs").write_text("\n".join(f"// {line}" for line in range(12)))
+    (workspace.root / "Long.py").write_text("\n".join(f"// {line}" for line in range(12)))
     monkeypatch.setattr(
         "app.agents.runtime.graph_builder.create_model",
         lambda *_args, **_kwargs: BudgetSequenceModel(),
@@ -169,7 +167,7 @@ async def test_partial_run_keeps_pending_target_and_continue_reuses_evidence(ser
                 answer = AIMessage(content='{"verdict":"passed","issues":[]}')
             elif isinstance(messages[-1], ToolMessage):
                 answer = AIMessage(
-                    content="补读第九行。[新读](source:Long.cs#L9) [复用](source:Long.cs#L1)"
+                    content="补读第九行。[新读](source:Long.py#L9) [复用](source:Long.py#L1)"
                 )
             else:
                 assert "剩余目标" in messages[0].text
@@ -179,7 +177,7 @@ async def test_partial_run_keeps_pending_target_and_continue_reuses_evidence(ser
                         {
                             "id": "remaining-9",
                             "name": "read_source",
-                            "args": {"path": "Long.cs", "start_line": 9, "end_line": 9},
+                            "args": {"path": "Long.py", "start_line": 9, "end_line": 9},
                         }
                     ],
                 )
@@ -199,4 +197,3 @@ async def test_partial_run_keeps_pending_target_and_continue_reuses_evidence(ser
         repository.run_event(following["id"], "run_completion")["semantic_review"]["verdict"]
         == "passed"
     )
-    runtime.semantic.close()

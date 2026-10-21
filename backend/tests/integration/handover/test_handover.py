@@ -81,14 +81,14 @@ def source(client, project_id, filename="source.txt", data=None):
 
 
 def baseline(client, project_id):
-    raw = source(client, project_id, "baseline.cs", b"class Controller {}")
+    raw = source(client, project_id, "baseline.py", b"class Controller {}")
     row = create(
         client,
         project_id,
         "baseline",
         "接收环境",
         source_id=raw["id"],
-        source_scope="Controller.cs 离线验收范围",
+        source_scope="Controller.py 离线验收范围",
         software_version="V1",
         device="设备 A",
         firmware="1",
@@ -266,7 +266,7 @@ def test_source_files_fixed_versions_quotations_and_exports(client, services):
     captured = client.post(
         url(identifier) + "/sources/capture",
         json={
-            "path": "Program.cs",
+            "path": "Program.py",
             "source_project_id": identifier,
             "actor": "整理人",
             "provider": "仓库",
@@ -277,12 +277,12 @@ def test_source_files_fixed_versions_quotations_and_exports(client, services):
     assert not client.get(url(identifier) + f"/sources/{captured['id']}/compare").json()["changed"]
     other_root = services[0].workspace.parent / "same-code-other-root"
     other_root.mkdir()
-    (other_root / "Program.cs").write_bytes((services[0].workspace / "Program.cs").read_bytes())
+    (other_root / "Program.py").write_bytes((services[0].workspace / "Program.py").read_bytes())
     client.patch(f"/api/projects/{identifier}", json={"source_root": str(other_root)})
     comparison = client.get(url(identifier) + f"/sources/{captured['id']}/compare").json()
     assert comparison["changed"] and comparison["saved_sha256"] == comparison["current_sha256"]
     client.patch(f"/api/projects/{identifier}", json={"source_root": str(services[0].workspace)})
-    (services[0].workspace / "Program.cs").write_text("class New {}", encoding="utf-8")
+    (services[0].workspace / "Program.py").write_text("class New {}", encoding="utf-8")
     assert client.get(url(identifier) + f"/sources/{captured['id']}/compare").json()["changed"]
     original = client.get(url(identifier) + f"/sources/{captured['id']}/original")
     assert b"class Program" in original.content
@@ -328,7 +328,7 @@ def test_source_files_fixed_versions_quotations_and_exports(client, services):
         )
     )
     assert "handover.docx" in archive.namelist() and any(
-        name.endswith("Program.cs") for name in archive.namelist()
+        name.endswith("Program.py") for name in archive.namelist()
     )
 
 
@@ -336,10 +336,10 @@ def test_zip_readonly_paths_docx_and_project_material_capture(client):
     identifier = project(client)
     stream = io.BytesIO()
     with zipfile.ZipFile(stream, "w") as archive:
-        archive.writestr("src/Program.cs", "class Motor {}")
+        archive.writestr("src/Program.py", "class Motor {}")
     imported = source(client, identifier, "source.zip", stream.getvalue())
     file = client.get(
-        url(identifier) + f"/sources/{imported['id']}/file", params={"path": "src/Program.cs"}
+        url(identifier) + f"/sources/{imported['id']}/file", params={"path": "src/Program.py"}
     ).json()
     assert file["content"] == "class Motor {}"
     assert (
@@ -350,7 +350,7 @@ def test_zip_readonly_paths_docx_and_project_material_capture(client):
     )
     unsafe = io.BytesIO()
     with zipfile.ZipFile(unsafe, "w") as archive:
-        archive.writestr("../unsafe.cs", "class Unsafe {}")
+        archive.writestr("../unsafe.py", "class Unsafe {}")
     assert (
         client.post(
             url(identifier) + "/sources/import?filename=source.zip&actor=人",

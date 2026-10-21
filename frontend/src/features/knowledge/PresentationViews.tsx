@@ -17,14 +17,14 @@ export function ShowcaseHome({ onTopic, onDiagram, onAllDiagrams }: Navigation) 
         <div className="showcase-intro">
           <span className="eyebrow hero-kicker">
             <UiIcon name="flow" />
-            ZX2200 · 系统与流程
+            SWE-agent · 源码与流程
           </span>
           <h1>
-            从生产全局
+            从源码入口
             <br />
-            <span>读懂每个环节</span>
+            <span>读懂执行链路</span>
           </h1>
-          <p>从业务流程理解模块职责，沿节点进入调用关系和对应源码，查看梳理与复核进度。</p>
+          <p>从源码入口理解模块职责，沿节点进入调用关系和对应源码，查看梳理与复核进度。</p>
           <div className="card-actions">
             <button className="button primary" onClick={() => onTopic('architecture')}>
               从系统架构开始
@@ -40,7 +40,7 @@ export function ShowcaseHome({ onTopic, onDiagram, onAllDiagrams }: Navigation) 
           <ol>
             {[
               ['建立系统模型', '理解边界与模块职责'],
-              ['阅读生产主流程', '串起启动、加工与交接'],
+              ['阅读核心流程', '串起入口、循环与工具边界'],
               ['展开专题与条件', '了解执行条件与异常处理'],
               ['定位调用与完整源码', '从业务节点追溯代码实现'],
             ].map(([text, description], index) => (
@@ -62,7 +62,7 @@ export function ShowcaseHome({ onTopic, onDiagram, onAllDiagrams }: Navigation) 
         </span>
         <span>
           <b>{archifyData.graphs.length.toString().padStart(2, '0')}</b>
-          <small>生产主流程</small>
+          <small>核心流程</small>
         </span>
         <span>
           <b>
@@ -77,8 +77,8 @@ export function ShowcaseHome({ onTopic, onDiagram, onAllDiagrams }: Navigation) 
       <section className="section">
         <div className="section-heading">
           <div>
-            <h2>生产主流程</h2>
-            <p>沿启动、来料、加工、交接与恢复逐步阅读</p>
+            <h2>核心流程</h2>
+            <p>沿入口、执行循环与工具边界逐步阅读</p>
           </div>
           <button className="text-button" onClick={onAllDiagrams}>
             全部图谱
@@ -103,7 +103,7 @@ export function ShowcaseHome({ onTopic, onDiagram, onAllDiagrams }: Navigation) 
       <section className="section card panel reading-boundary">
         <h2>这些内容说明什么</h2>
         <p>
-          展示的是已形成的源码分析与流程整理。图中的成功返回、状态变化与保存调用，需结合实际配方、设备和运行环境理解。各专题保留异常处理与待现场确认的范围。
+          展示的是已形成的源码分析与流程整理。图中的调用顺序与条件需结合当前源码版本理解；各专题保留未核实与运行时未知的范围。
         </p>
       </section>
     </div>
@@ -124,7 +124,7 @@ export function TopicDirectory({
           <div>
             <span className="eyebrow">功能说明</span>
             <h1>按你关心的问题阅读</h1>
-            <p>从系统全局到生产、维护与数据，查看用途、条件、异常处理和相关原始图谱。</p>
+            <p>从系统全局到源码入口、执行循环与工具边界，查看用途、条件、异常处理和相关原始图谱。</p>
           </div>
         </div>
       )}

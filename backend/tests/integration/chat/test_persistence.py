@@ -43,8 +43,8 @@ def test_memory_versions_provenance_and_reload(services):
     thread = repository.create_thread("来源")
     request = MemoryWrite(
         name="项目.md",
-        content="入口在 Program.cs",
-        source_paths=["Program.cs"],
+        content="入口在 Program.py",
+        source_paths=["Program.py"],
         source_thread_id=thread["id"],
     )
     saved = memory.save(request)
@@ -52,7 +52,7 @@ def test_memory_versions_provenance_and_reload(services):
         memory.save(request)
     reloaded = MemoryService(paths, database, workspace)
     assert reloaded.read("project", "项目.md")["source_thread_id"] == thread["id"]
-    (workspace.root / "Program.cs").write_text("class Changed {}", encoding="utf-8")
+    (workspace.root / "Program.py").write_text("class Changed {}", encoding="utf-8")
     assert reloaded.read("project", "项目.md")["sources"][0]["stale"]
     reloaded.delete("project", "项目.md", saved["version"])
     assert reloaded.list() == []

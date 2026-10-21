@@ -10,8 +10,6 @@ const labels: Record<string, string> = {
   read_handover_material: '读取交接资料',
   search_source: '检索源码',
   find_source_files: '查找源码文件',
-  csharp_symbols: '分析 C# 符号',
-  csharp_relations: '核对 C# 调用关系',
   python_symbols: '分析 Python 符号',
   python_relations: '核对 Python 调用关系',
   recall_conversation: '查找历史对话',

@@ -189,7 +189,7 @@ class PythonAnalysis:
         }
 
     def analyze(self, path: str, line: int) -> dict:
-        """与 CSharpAnalysis 保持一致的入口，返回选定行所属作用域的关系。"""
+        """返回选定行所属作用域的保守静态关系。"""
         return self.relations(path, line)
 
     def _files(self) -> list[PythonFile]:

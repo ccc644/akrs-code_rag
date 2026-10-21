@@ -51,8 +51,8 @@ def authenticate_business_clients(request, monkeypatch, tmp_path):
 def services(tmp_path):
     root = tmp_path / "trunk"
     root.mkdir()
-    (root / "Program.cs").write_text(
-        "class Program {\n static void Main() {}\n}\n", encoding="utf-8"
+    (root / "Program.py").write_text(
+        "class Program:\n    def Main(self):\n        pass\n", encoding="utf-8"
     )
     paths = Paths(tmp_path / "data", root)
     database = Database(paths.data / "app.sqlite3")

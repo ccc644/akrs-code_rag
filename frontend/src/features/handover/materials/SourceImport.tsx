@@ -174,7 +174,7 @@ export function SourceImport({
                 required
                 type="file"
                 aria-label="文件"
-                accept=".docx,.pdf,.zip,.txt,.md,.cs,.cpp,.c,.h,.json,.yaml,.yml,.xml,.ini,.log"
+                accept=".docx,.pdf,.zip,.txt,.md,.py,.json,.yaml,.yml,.xml,.ini,.log"
                 onChange={(event) => setFile(event.target.files?.[0])}
               />
               <small>

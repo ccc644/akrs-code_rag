@@ -49,9 +49,9 @@ async def test_natural_conflict_review_requires_confirmation_and_preserves_versi
 def test_source_changed_memory_requires_review_and_old_history_stays(services):
     _, _, workspace, _, memory, _ = services
     row = memory.save(
-        MemoryWrite(name="入口.md", content="入口在 Program.cs。", source_paths=["Program.cs"])
+        MemoryWrite(name="入口.md", content="入口在 Program.py。", source_paths=["Program.py"])
     )
-    (workspace.root / "Program.cs").write_text("class Changed {}")
+    (workspace.root / "Program.py").write_text("class Changed {}")
     assert memory.read("project", row["name"])["lifecycle"] == "needs_review"
     assert "needs_review" in memory.prompt_snapshot("入口")[0]
 
@@ -85,7 +85,7 @@ async def test_automatic_project_memory_requires_current_run_source(services, ve
     _, _, workspace, repository, memory, _ = services
     evidence = SourceEvidence(workspace, lambda *_: None)
     if verified:
-        evidence.record(source_excerpt(workspace, "Program.cs", 1, 3))
+        evidence.record(source_excerpt(workspace, "Program.py", 1, 3))
     tools = {
         item.name: item for item in conversation_tools(repository, memory, None, evidence=evidence)
     }
@@ -94,12 +94,12 @@ async def test_automatic_project_memory_requires_current_run_source(services, ve
             {
                 "name": "依据.md",
                 "content": "入口函数为 Main。",
-                "source_paths": ["/workspace/Program.cs"],
+                "source_paths": ["/workspace/Program.py"],
             }
         )
     )
     assert result["lifecycle"] == ("valid" if verified else "needs_review")
-    assert result["sources"][0]["path"] == "Program.cs"
+    assert result["sources"][0]["path"] == "Program.py"
 
 
 async def test_failed_memory_tool_can_recover_and_cannot_reactivate_invalid_record(services):
@@ -109,7 +109,7 @@ async def test_failed_memory_tool_can_recover_and_cannot_reactivate_invalid_reco
         {
             "name": "错误路径.md",
             "content": "不能保存未读取来源。",
-            "source_paths": ["../private.cs"],
+            "source_paths": ["../private.py"],
         }
     )
     assert "对话工具未完成" in failed and not memory.list()

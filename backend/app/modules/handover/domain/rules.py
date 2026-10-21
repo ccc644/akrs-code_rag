@@ -224,7 +224,7 @@ def confirmation_gate(record, records):
             if value.startswith(("未知", "待确认", "未提供", "不清楚", "unknown")):
                 raise ValueError("基线仍有未知设备条件；不适用的项目也应明确记录后再确认")
         source = records[payload["source_id"]]
-        if source["payload"]["format"] not in {"source", "zip", "cs", "cpp", "c", "h"}:
+        if source["payload"]["format"] not in {"source", "zip", "py", "cs", "cpp", "c", "h"}:
             raise ValueError("基线须关联固定源码文件或源码 ZIP，说明文档不能代替源码基线")
     elif kind == "interview":
         required(payload, [("author", "原作者"), ("date", "访谈日期"), ("transcript", "访谈原文")])

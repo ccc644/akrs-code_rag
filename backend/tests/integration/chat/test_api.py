@@ -30,7 +30,7 @@ def test_api_migrations_validation_and_origin(services):
             "content": "问题",
             "selections": [
                 {
-                    "path": "Program.cs",
+                    "path": "Program.py",
                     "start_line": 3,
                     "end_line": 1,
                     "content": "x",

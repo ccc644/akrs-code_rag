@@ -61,7 +61,7 @@ async def test_full_backup_restore_preserves_graph_messages_memory_and_private_s
         lambda *_args, **_kwargs: DeterministicModel(),
     )
     thread = repository.create_thread("恢复完整会话")
-    run = repository.create_run(thread["id"], "说明 Program.cs", [])
+    run = repository.create_run(thread["id"], "说明 Program.py", [])
     runtime = AgentRuntime(paths, settings, workspace, repository, memories)
     repository.finish(
         run["id"],
@@ -72,8 +72,8 @@ async def test_full_backup_restore_preserves_graph_messages_memory_and_private_s
     memories.save(
         MemoryWrite(
             name="恢复事实.md",
-            content="入口：Program.cs",
-            source_paths=["Program.cs"],
+            content="入口：Program.py",
+            source_paths=["Program.py"],
             source_thread_id=thread["id"],
         )
     )

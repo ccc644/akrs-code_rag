@@ -9,7 +9,7 @@ import './source-guides.css';
 type Navigate = (route: Route) => void;
 export function SourceGuidePanel({ page, navigate }: { page: string; navigate: Navigate }) {
   const guide = guideForPage(page);
-  // 专题保留整体入口；局部图默认展示对应环节，避免胶检页先打开配方排序。
+  // 专题保留整体入口；局部页面默认展示对应环节，避免先打开无关流程。
   const [selected, setSelected] = useState(guide?.initialFlows?.[page] ?? guide?.flows[0]?.id);
   if (!guide) return null;
   const flow = guide.flows.find((item) => item.id === selected) ?? guide.flows[0];

@@ -23,7 +23,7 @@ from app.modules.source_analysis.models import SourceWorkspace
 
 def git_source(folder, repo):
     folder.mkdir()
-    (folder / "Program.cs").write_text(f"// {repo}\nclass Program {{}}", encoding="utf-8")
+    (folder / "Program.py").write_text(f"// {repo}\nclass Program {{}}", encoding="utf-8")
     subprocess.run(["git", "init", "-q", str(folder)], check=True, capture_output=True)
     subprocess.run(
         ["git", "-C", str(folder), "remote", "add", "origin", f"https://github.com/{repo}.git"],
@@ -64,7 +64,7 @@ def test_preview_create_and_source_identity_are_bound_automatically(services, tm
             assert session.get(SourceWorkspace, Workspace(root).source_id).root == str(
                 root.resolve()
             )
-        source = client.get(f"/api/p/{project['id']}/file", params={"path": "Program.cs"})
+        source = client.get(f"/api/p/{project['id']}/file", params={"path": "Program.py"})
         assert "team/ProjectA" in source.json()["content"]
         assert (
             client.get(f"/api/projects/{project['id']}").json()["deepwiki_repo"] == "team/ProjectA"
@@ -158,7 +158,7 @@ async def test_runs_use_each_projects_source_and_repository_without_changing_glo
                 captured[label] = (
                     current.runtime.workspace.root,
                     current_configuration(current.settings).deepwiki_repo,
-                    current.runtime.workspace.read("Program.cs")["content"],
+                    current.runtime.workspace.read("Program.py")["content"],
                 )
                 return "已读取当前项目"
 

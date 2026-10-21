@@ -148,7 +148,7 @@ export function GraphAtlas({ navigate }: { navigate: (route: Route) => void }) {
           </span>
         }
       >
-        先读 8 条生产主流程，再按问题进入专题图。
+        按专题阅读已复核的源码流程，再按问题进入具体图谱。
       </PageHeader>
       <div className="filter-row">
         <input
@@ -159,7 +159,7 @@ export function GraphAtlas({ navigate }: { navigate: (route: Route) => void }) {
         />
         <Select aria-label="阅读层级" value={level} onValueChange={setLevel}>
           <option value="all">全部层级</option>
-          <option value="main">生产主流程</option>
+          <option value="main">核心流程</option>
           <option value="detail">深入阅读</option>
         </Select>
         <Select aria-label="阅读专题" value={topic} onValueChange={setTopic}>
@@ -182,7 +182,7 @@ export function GraphAtlas({ navigate }: { navigate: (route: Route) => void }) {
         </Select>
       </div>
       {[
-        [main, '生产主流程', '按生产环节建立整体认识'],
+        [main, '核心流程', '按源码入口与执行链路建立整体认识'],
         [detailed, '深入阅读', '按具体问题查看条件、交接与恢复'],
       ].map(([list, title, description]) => {
         const group = list as FlowchartCatalogEntry[];
@@ -250,7 +250,7 @@ function CatalogCard({ entry, onOpen }: { entry: FlowchartCatalogEntry; onOpen: 
             />
           )}
         </span>
-        <span className="pill">{entry.chapter ? '生产主流程' : entry.typeLabel}</span>
+        <span className="pill">{entry.chapter ? '核心流程' : entry.typeLabel}</span>
       </div>
       <h3>{displayDiagramTitle(entry.id, entry.title)}</h3>
       <p className="diagram-question">{diagramReadings[entry.id]?.summary}</p>
@@ -504,7 +504,7 @@ function OriginalDiagram({
       <div className="panel-title">
         <div>
           <span className="eyebrow">流程图</span>
-          <p>使用图内缩放、查找与演示工具阅读。生产主流程可点击节点，查看下方对应模块与源码。</p>
+          <p>使用图内缩放、查找与演示工具阅读。核心流程可点击节点，查看下方对应模块与源码。</p>
         </div>
         <a className="button" href={diagramURL(theme)} target="_blank" rel="noreferrer">
           全屏阅读 ↗

@@ -35,7 +35,7 @@ def test_each_account_automatically_gets_same_source_and_separate_empty_project(
         first = default_project(client)
         assert first["owner_id"] == first_user["id"]
         assert first["source_root"] == str(services[0].workspace)
-        source = client.get(f"/api/p/{first['id']}/file?path=Program.cs")
+        source = client.get(f"/api/p/{first['id']}/file?path=Program.py")
         assert source.status_code == 200
         add_second(client)
         second_user = login_second(client)
@@ -43,7 +43,7 @@ def test_each_account_automatically_gets_same_source_and_separate_empty_project(
         assert second["id"] != first["id"] and second["owner_id"] == second_user["id"]
         assert second["source_root"] == first["source_root"]
         assert (
-            client.get(f"/api/p/{second['id']}/file?path=Program.cs").json()["version"]
+            client.get(f"/api/p/{second['id']}/file?path=Program.py").json()["version"]
             == source.json()["version"]
         )
         assert client.get(f"/api/p/{second['id']}/threads").json() == []
@@ -51,7 +51,7 @@ def test_each_account_automatically_gets_same_source_and_separate_empty_project(
         assert client.get("/api/projects/search-threads").json() == []
         assert client.get(f"/api/p/{first['id']}/threads").status_code == 404
         assert (
-            client.get(f"/api/sources/{services[2].source_id}/file?path=Program.cs").status_code
+            client.get(f"/api/sources/{services[2].source_id}/file?path=Program.py").status_code
             == 200
         )
         login_second(client)
@@ -120,6 +120,6 @@ def test_archiving_default_is_respected_and_independent_chat_still_has_source(se
         sign_in(client, "user")
         assert client.get("/api/projects").json()["projects"] == []
         assert len(client.get("/api/projects?state=archived").json()["projects"]) == 1
-        response = client.get("/api/p/independent/file?path=Program.cs")
+        response = client.get("/api/p/independent/file?path=Program.py")
         assert response.status_code == 200
         assert response.json()["source_workspace_id"] == services[2].source_id

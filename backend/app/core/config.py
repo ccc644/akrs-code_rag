@@ -175,7 +175,7 @@ class Paths:
     def __init__(self, data_dir: Path | None = None, workspace: Path | None = None):
         self.data = data_dir or Path(os.getenv("TRUNK_AGENT_DATA_DIR", PROJECT_ROOT / "data"))
         self.workspace = workspace or Path(
-            os.getenv("TRUNK_AGENT_WORKSPACE", PROJECT_ROOT / "trunk")
+            os.getenv("TRUNK_AGENT_WORKSPACE", PROJECT_ROOT / "trunk" / "swe-agent")
         )
         self.data = self.data.resolve()
         self.workspace = self.workspace.resolve()

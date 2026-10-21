@@ -47,7 +47,7 @@ def test_selection_history_pages_and_full_content_read(services):
     content = "a" * 13000 + "SelectionOnly" + "b" * 15000
     for index in range(23):
         run = repository.create_run(
-            thread["id"], str(index), [{"path": "Code/SelectionOnly.cs", "content": content}]
+            thread["id"], str(index), [{"path": "Code/SelectionOnly.py", "content": content}]
         )
         repository.finish(run["id"], "答案")
     page = repository.history.search(thread["id"], "SelectionOnly", limit=10)
@@ -67,9 +67,9 @@ def test_selection_history_pages_and_full_content_read(services):
 
 def test_first_send_creates_title_atomically(services):
     repository = services[3]
-    run = repository.create_run(None, "解释这一段", [{"path": "Module/Main.cs"}])
+    run = repository.create_run(None, "解释这一段", [{"path": "Module/Main.py"}])
     thread = repository.thread(run["thread_id"])
-    assert thread["title"] == "Main.cs · 解释这一段"
+    assert thread["title"] == "Main.py · 解释这一段"
     assert len(thread["messages"]) == 1
     with pytest.raises(ValueError):
         repository.create_run(run["thread_id"], "重复提交", [])

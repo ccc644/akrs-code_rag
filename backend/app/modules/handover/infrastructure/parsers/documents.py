@@ -23,7 +23,7 @@ def parse_document(data, filename):
     elif extension in {
         ".txt",
         ".md",
-        ".cs",
+        ".py",
         ".cpp",
         ".c",
         ".h",

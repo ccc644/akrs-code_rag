@@ -2,7 +2,6 @@
 
 from pathlib import Path
 
-from app.modules.source_analysis.csharp import CSharpAnalysis
 from app.modules.source_analysis.workspace import Workspace
 
 
@@ -85,38 +84,3 @@ class SourceCollection(Workspace):
             results.extend({**row, "path": prefix + row["path"]} for row in result["matches"])
             truncated |= result["truncated"] or len(results) > limit
         return {"matches": results[:limit], "truncated": truncated, "engine": "project-directories"}
-
-
-class ProjectAnalysis(CSharpAnalysis):
-    def __init__(self, workspace):
-        super().__init__(workspace)
-        self.analyzers = {"": CSharpAnalysis(workspace.primary)}
-        self.analyzers.update(
-            {
-                source_prefix(key): CSharpAnalysis(child)
-                for key, (_, child) in workspace.attached.items()
-            }
-        )
-
-    def analyze(self, path, line):
-        _, relative, prefix = self.workspace.locate(path.removeprefix("/workspace/"))
-        result = self.analyzers[prefix].analyze(relative, line)
-
-        # Roslyn 返回目录内的相对路径；统一补上附加目录前缀供后续读取和引用。
-        def rebase(value):
-            if isinstance(value, list):
-                return [rebase(item) for item in value]
-            if isinstance(value, dict):
-                return {
-                    key: prefix + item
-                    if key == "path" and isinstance(item, str) and item
-                    else rebase(item)
-                    for key, item in value.items()
-                }
-            return value
-
-        return rebase(result)
-
-    def close(self):
-        for analyzer in self.analyzers.values():
-            analyzer.close()

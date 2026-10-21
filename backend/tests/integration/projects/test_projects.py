@@ -54,7 +54,7 @@ def test_project_isolation_same_source_and_empty_project(services):
         assert client.get(scoped(first, "/threads")).json()[0]["project_id"] == first["id"]
         assert client.get(scoped(second, "/threads")).json() == []
         assert client.get(scoped(empty, "/files")).json() == []
-        assert client.get(scoped(empty, "/file?path=Program.cs")).status_code == 404
+        assert client.get(scoped(empty, "/file?path=Program.py")).status_code == 404
         assert (
             client.put(
                 scoped(first, "/memories"),
@@ -63,7 +63,7 @@ def test_project_isolation_same_source_and_empty_project(services):
             == 200
         )
         assert client.get(scoped(second, "/memories")).json() == []
-        assert client.get(scoped(first, "/file?path=Program.cs")).status_code == 200
+        assert client.get(scoped(first, "/file?path=Program.py")).status_code == 200
         assert client.get(scoped(first, "/file?path=../secret")).status_code == 409
 
 
@@ -71,14 +71,14 @@ def test_move_keeps_source_identity_and_all_messages(services, tmp_path):
     paths = services[0]
     other = tmp_path / "other"
     other.mkdir()
-    (other / "Program.cs").write_text("other source", encoding="utf-8")
+    (other / "Program.py").write_text("other source", encoding="utf-8")
     app = create_app(paths)
     with TestClient(app) as client:
         first = create_project(client, "A", str(paths.workspace))
         second = create_project(client, "B", str(other))
         repository = app.state.projects.services(first["id"]).repository
         run = repository.create_run(None, "问题", [])
-        repository.finish(run["id"], "[引用](source:Program.cs#L1)")
+        repository.finish(run["id"], "[引用](source:Program.py#L1)")
         moved = client.post(
             "/api/projects/move-threads",
             json={"ids": [run["thread_id"]], "project_id": second["id"]},
@@ -91,12 +91,12 @@ def test_move_keeps_source_identity_and_all_messages(services, tmp_path):
         assert thread["context_generation"] == 1
         source_id = thread["messages"][1]["source_workspace_id"]
         assert (
-            client.get(f"/api/sources/{source_id}/file?path=Program.cs")
+            client.get(f"/api/sources/{source_id}/file?path=Program.py")
             .json()["content"]
             .startswith("class Program")
         )
         assert (
-            client.get(scoped(second, "/file?path=Program.cs")).json()["content"] == "other source"
+            client.get(scoped(second, "/file?path=Program.py")).json()["content"] == "other source"
         )
         assert (
             client.post(
@@ -172,7 +172,7 @@ def test_source_change_restarts_context_and_preserves_original_citations(service
     paths = services[0]
     other = tmp_path / "different"
     other.mkdir()
-    (other / "Program.cs").write_text("new root", encoding="utf-8")
+    (other / "Program.py").write_text("new root", encoding="utf-8")
     app = create_app(paths)
     with TestClient(app) as client:
         project = create_project(client, "换目录", str(paths.workspace))
@@ -186,15 +186,15 @@ def test_source_change_restarts_context_and_preserves_original_citations(service
             ).status_code
             == 200
         )
-        assert client.get(scoped(project, "/file?path=Program.cs")).json()["content"] == "new root"
+        assert client.get(scoped(project, "/file?path=Program.py")).json()["content"] == "new root"
         thread = client.get(scoped(project, f"/threads/{run['thread_id']}")).json()
         assert thread["context_generation"] == 1
         assert thread["messages"][1]["source_workspace_id"] == old_source
         assert client.post(scoped(project, f"/runs/{run['id']}/regenerate")).status_code == 409
     with TestClient(create_app(paths)) as client:
-        assert client.get(scoped(project, "/file?path=Program.cs")).json()["content"] == "new root"
+        assert client.get(scoped(project, "/file?path=Program.py")).json()["content"] == "new root"
         assert (
-            client.get(f"/api/sources/{old_source}/file?path=Program.cs")
+            client.get(f"/api/sources/{old_source}/file?path=Program.py")
             .json()["content"]
             .startswith("class Program")
         )
@@ -377,7 +377,7 @@ def test_project_order_pinning_and_archive_queue_guard(services):
 def test_running_projects_keep_instruction_and_source_snapshots(services, tmp_path, monkeypatch):
     other = tmp_path / "run-b"
     other.mkdir()
-    (other / "Program.cs").write_text("source B", encoding="utf-8")
+    (other / "Program.py").write_text("source B", encoding="utf-8")
     release = threading.Event()
     started = {"项目 A": threading.Event(), "项目 B": threading.Event()}
     seen = {}
@@ -386,7 +386,7 @@ def test_running_projects_keep_instruction_and_source_snapshots(services, tmp_pa
         name = run["project_snapshot"]["name"]
         started[name].set()
         await asyncio.to_thread(release.wait, 10)
-        seen[name] = (project_prompt(), runtime.workspace.read("Program.cs")["content"])
+        seen[name] = (project_prompt(), runtime.workspace.read("Program.py")["content"])
         return name
 
     monkeypatch.setattr("app.agents.runtime.engine.AgentRuntime.execute", execute)

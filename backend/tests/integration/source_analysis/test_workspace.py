@@ -43,7 +43,7 @@ def test_windows_junction_cannot_escape(services, tmp_path):
     workspace = services[2]
     outside = tmp_path / "private-folder"
     outside.mkdir()
-    (outside / "private.cs").write_text("private", encoding="utf-8")
+    (outside / "private.py").write_text("private", encoding="utf-8")
     link = workspace.root / "linked-folder"
     # 目录联接不需要符号链接权限，Windows 上仍可实际检查重解析点越界防护。
     subprocess.run(
@@ -60,7 +60,7 @@ def test_windows_junction_cannot_escape(services, tmp_path):
     )
     try:
         with pytest.raises(ValueError):
-            workspace.read("linked-folder/private.cs")
+            workspace.read("linked-folder/private.py")
     finally:
         link.rmdir()
 
@@ -78,19 +78,19 @@ def test_binary_rejected():
 
 def test_symbols_search_and_readonly_backend(services):
     workspace = services[2]
-    symbols = workspace.symbols("Program.cs")["symbols"]
+    symbols = workspace.symbols("Program.py")["symbols"]
     assert {symbol["name"] for symbol in symbols} == {"Program", "Main"}
     assert workspace.search("Main")["matches"][0]["line"] == 2
     backend = SourceBackend(workspace)
-    assert backend.write("/Program.cs", "overwritten").error
-    assert backend.read("/Program.cs", offset=1, limit=1).start_line == 2
-    assert "Main" in workspace.read("Program.cs")["content"]
+    assert backend.write("/Program.py", "overwritten").error
+    assert backend.read("/Program.py", offset=1, limit=1).start_line == 2
+    assert "Main" in workspace.read("Program.py")["content"]
 
 
 def test_search_legacy_chinese_file_preserves_text(services):
     workspace = services[2]
-    text = "// 校准入口 Calibration\nclass Legacy {}"
-    (workspace.root / "Legacy.cs").write_bytes(text.encode("gb18030"))
+    text = "# 校准入口 Calibration\nclass Legacy:\n    pass"
+    (workspace.root / "Legacy.py").write_bytes(text.encode("gb18030"))
     for query in ("校准", "Calibration"):
-        matches = workspace.search(query, "*.cs")["matches"]
-        assert matches == [{"path": "Legacy.cs", "line": 1, "text": text.splitlines()[0]}]
+        matches = workspace.search(query, "*.py")["matches"]
+        assert matches == [{"path": "Legacy.py", "line": 1, "text": text.splitlines()[0]}]

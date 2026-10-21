@@ -7,7 +7,7 @@ VERIFY_TOOLS = {
     "read_source",
     "read_source_context",
     "read_source_batch",
-    "csharp_relations",
+    "python_relations",
     "plan_source_checks",
 }
 
@@ -91,7 +91,7 @@ class RetrievalBudget(AgentMiddleware):
             if exhausted
             else (
                 "\n内部检索控制：剩余工具额度只用于 read_source_batch/read_source/"
-                "read_source_context/csharp_relations 等关键复核。停止广泛搜索，"
+                "read_source_context/python_relations 等关键复核。停止广泛搜索，"
                 "优先核对调用位置、提前返回和替代实现；不要复述本控制通知。"
             )
         )

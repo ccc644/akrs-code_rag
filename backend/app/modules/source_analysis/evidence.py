@@ -17,9 +17,7 @@ CODE_LITERAL = re.compile(
     r"(?ms)^[ \t]*(?P<fence>`{3,}|~{3,})[^\n]*\n.*?^[ \t]*(?P=fence)[ \t]*$|`+[^`\n]*`+"
 )
 LOCATION = re.compile(r"(.+)#L(\d+)(?:[-–](?:L)?(\d+))?$")
-CODE_QUESTION = re.compile(
-    r"源码|函数|方法|调用链|实现逻辑|分支|入口|异常处理|[\w./-]+\.(?:cs|py)\b"
-)
+CODE_QUESTION = re.compile(r"源码|函数|方法|调用链|实现逻辑|分支|入口|异常处理|[\w./-]+\.py\b")
 
 
 def citation_matches(text):

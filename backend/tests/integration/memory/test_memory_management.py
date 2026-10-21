@@ -17,9 +17,9 @@ from tests.helpers.models import DeterministicModel
 def test_relevance_preferences_and_duplicate_injection(services):
     memory = services[4]
     memory.save(MemoryWrite(name="无关.md", content="数据库使用 SQLite 存储对话"))
-    memory.save(MemoryWrite(name="入口.md", content="Program.cs 内 Main 启动 WinForms"))
+    memory.save(MemoryWrite(name="入口.md", content="Program.py 内 Main 启动 WinForms"))
     memory.save(MemoryWrite(name="偏好.md", scope="user", content="回答使用简洁中文"))
-    prompt, included = memory.prompt_snapshot("请解释 Program.cs 的 Main")
+    prompt, included = memory.prompt_snapshot("请解释 Program.py 的 Main")
     assert [row["name"] for row in included] == ["偏好.md", "入口.md"]
     assert included[0]["inclusion_reason"] == "稳定用户偏好"
     assert "SQLite" not in prompt
@@ -32,12 +32,12 @@ def test_relevance_preferences_and_duplicate_injection(services):
 
 def test_duplicate_and_conflicting_facts_need_current_review(services):
     memory = services[4]
-    first = memory.save(MemoryWrite(name="入口.md", content="入口文件：Program.cs"))
-    duplicate = MemoryWrite(name="重复.md", content="入口文件： Program.cs \n")
+    first = memory.save(MemoryWrite(name="入口.md", content="入口文件：Program.py"))
+    duplicate = MemoryWrite(name="重复.md", content="入口文件： Program.py \n")
     assert memory.review(duplicate)[0]["kind"] == "duplicate"
     with pytest.raises(ValueError, match="已保存在"):
         memory.save(duplicate)
-    alternate = MemoryWrite(name="入口说明.md", content="入口文件：Other.cs")
+    alternate = MemoryWrite(name="入口说明.md", content="入口文件：Other.py")
     assert memory.review(alternate)[0]["kind"] == "conflict"
     with pytest.raises(ValueError, match="核对"):
         memory.save(alternate)
@@ -48,7 +48,7 @@ def test_duplicate_and_conflicting_facts_need_current_review(services):
         }
     )
     changed = memory.save(
-        MemoryWrite(name="入口.md", content="入口文件：Changed.cs", version=first["version"])
+        MemoryWrite(name="入口.md", content="入口文件：Changed.py", version=first["version"])
     )
     with pytest.raises(ValueError, match="相关记忆已更新"):
         memory.save(acknowledged)
@@ -62,12 +62,12 @@ def test_duplicate_and_conflicting_facts_need_current_review(services):
 def test_history_restore_delete_and_source_snapshot_survive_restart(services):
     paths, database, workspace, repository, memory, _ = services
     thread = repository.create_thread("事实来源")
-    original = "入口位于 Program.cs\r\n需要核对行号\r\n"
+    original = "入口位于 Program.py\r\n需要核对行号\r\n"
     first = memory.save(
         MemoryWrite(
             name="事实.md",
             content=original,
-            source_paths=["Program.cs"],
+            source_paths=["Program.py"],
             source_thread_id=thread["id"],
         )
     )
@@ -77,7 +77,7 @@ def test_history_restore_delete_and_source_snapshot_survive_restart(services):
     history = memory.history.list("project", "事实.md")
     assert [row["action"] for row in history] == ["updated", "created"]
     assert history[-1]["content"] == original
-    (workspace.root / "Program.cs").write_text("class Changed {}", encoding="utf-8")
+    (workspace.root / "Program.py").write_text("class Changed {}", encoding="utf-8")
     restored = memory.restore(
         "project",
         "事实.md",
@@ -172,7 +172,7 @@ def test_memory_api_review_history_and_recovery(services):
 
 async def test_runtime_records_only_selected_memory_snapshot(services, monkeypatch):
     paths, _, workspace, repository, memories, settings = services
-    memories.save(MemoryWrite(name="入口.md", content="Program.cs 中的 Main 启动窗口"))
+    memories.save(MemoryWrite(name="入口.md", content="Program.py 中的 Main 启动窗口"))
     memories.save(MemoryWrite(name="无关.md", content="数据库中保存会话档案"))
     memories.save(MemoryWrite(name="偏好.md", scope="user", content="使用中文简短回答"))
     monkeypatch.setattr(
@@ -180,7 +180,7 @@ async def test_runtime_records_only_selected_memory_snapshot(services, monkeypat
         lambda *_args, **_kwargs: DeterministicModel(),
     )
     thread = repository.create_thread("相关记忆")
-    run = repository.create_run(thread["id"], "解释 Program.cs 的 Main", [])
+    run = repository.create_run(thread["id"], "解释 Program.py 的 Main", [])
     events = []
     await AgentRuntime(paths, settings, workspace, repository, memories).execute(
         run, lambda kind, payload: events.append((kind, payload))

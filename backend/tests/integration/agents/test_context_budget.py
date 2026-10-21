@@ -50,7 +50,7 @@ def test_breakdown_does_not_double_count_memory_or_selection():
         system_message=SystemMessage(content="系统提示\n" + memory),
         messages=[
             HumanMessage(
-                content="说明\n<code_selection path='Program.cs'>\n源码\n</code_selection>"
+                content="说明\n<code_selection path='Program.py'>\n源码\n</code_selection>"
             )
         ],
         tools=[wiki_tool()],
@@ -68,8 +68,8 @@ def test_memory_injection_respects_token_budget_and_preserves_original(services)
     _, _, _, _, memories, _ = services
     original = "用户偏好：默认中文回答。\n" + "稳定偏好" * 1000
     saved = memories.save(MemoryWrite(name="偏好.md", scope="user", content=original))
-    memories.save(MemoryWrite(name="项目.md", content="入口：Program.cs\n" + "项目事实" * 1000))
-    prompt, selected = memories.prompt_snapshot("Program.cs 入口", max_tokens=400)
+    memories.save(MemoryWrite(name="项目.md", content="入口：Program.py\n" + "项目事实" * 1000))
+    prompt, selected = memories.prompt_snapshot("Program.py 入口", max_tokens=400)
     assert text_tokens(prompt) <= 400
     assert selected[0]["scope"] == "user" and selected[0]["partial"]
     assert "源码来源：" in selected[0]["injected_text"]
@@ -93,7 +93,7 @@ async def test_framework_budget_snapshot_survives_configuration_change(services,
         "解释入口",
         [
             {
-                "path": "Program.cs",
+                "path": "Program.py",
                 "start_line": 1,
                 "end_line": 2,
                 "content": "class Program {\n static void Main() {}",
@@ -236,7 +236,7 @@ async def test_irreducible_request_is_not_sent_and_keeps_original(services, monk
         if oversized == "tools"
         else [
             {
-                "path": "Program.cs",
+                "path": "Program.py",
                 "start_line": 1,
                 "end_line": 2,
                 "content": "完整选区原文" * 20000,

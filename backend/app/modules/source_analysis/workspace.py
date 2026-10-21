@@ -1,19 +1,14 @@
-"""源码读取、文本检索与多语言语法符号；所有入口共享根目录边界。"""
+"""Python 源码读取、文本检索与 AST 语法符号；所有入口共享根目录边界。"""
 
 import base64
 import fnmatch
 import hashlib
 import json
 import os
-import re
 import shutil
 import subprocess
-import sys
 from itertools import islice
 from pathlib import Path, PurePosixPath
-
-import tree_sitter_c_sharp
-from tree_sitter import Language, Parser
 
 from app.infrastructure.cache.versions import VersionCache
 
@@ -56,7 +51,6 @@ class Workspace:
         self.id = content_version(str(self.root).encode())[:32]
         self.source_id = self.id
         self.source_cache = VersionCache()
-        self.symbol_cache = VersionCache(max_bytes=8_000_000)
 
     def resolve(self, relative: str = "") -> Path:
         normalized = relative.replace("\\", "/")
@@ -217,85 +211,8 @@ class Workspace:
 
     def symbols(self, path: str) -> dict:
         source = self.read(path)
-        if path.lower().endswith(".py"):
-            from app.modules.source_analysis.python import PythonAnalysis
+        if not path.lower().endswith(".py"):
+            return {"symbols": [], "version": source["version"], "analysis": "unsupported"}
+        from app.modules.source_analysis.python import PythonAnalysis
 
-            return PythonAnalysis(self).symbols(path)
-        if not path.lower().endswith(".cs"):
-            return {"symbols": [], "version": source["version"]}
-        parsed = self.symbol_cache.get_or_create(
-            (source["path"], source["version"]),
-            lambda: self._parse_symbols(source),
-            len(source["content"].encode("utf-8")) * 2,
-        )
-        # 返回的数据可由调用者排序，不允许影响其他窗口共享的缓存。
-        return {**parsed, "symbols": [dict(item) for item in parsed["symbols"]]}
-
-    @staticmethod
-    def _parse_symbols(source):
-        from app.modules.source_analysis.csharp import DOTNET, HELPER
-
-        command = (
-            [str(DOTNET), str(HELPER)]
-            if DOTNET.is_file() and HELPER.is_file()
-            else [sys.executable, "-m", "app.modules.source_analysis.symbol_parser"]
-        )
-        try:
-            response = subprocess.run(
-                command,
-                input=json.dumps({**source, "action": "syntax"}) + "\n",
-                capture_output=True,
-                text=True,
-                encoding="utf-8",
-                timeout=20,
-                cwd=Path(__file__).resolve().parents[3],
-                creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0,
-            )
-            if response.returncode == 0:
-                parsed = json.loads(response.stdout)
-                for item in parsed.get("symbols", []):
-                    item["kind"] = re.sub(r"(?<!^)(?=[A-Z])", "_", item["kind"]).lower()
-                return {**parsed, "version": source["version"]}
-        except (OSError, ValueError, subprocess.TimeoutExpired):
-            pass
-        return {
-            "symbols": [],
-            "version": source["version"],
-            "has_syntax_errors": True,
-            "analysis": "unavailable",
-            "reason": "语法解析失败，需按显式行号补读源码",
-        }
-
-    @staticmethod
-    def _native_symbols(source):
-        parser = Parser(Language(tree_sitter_c_sharp.language()))
-        tree = parser.parse(source["content"].encode("utf-8"))
-        symbols = []
-        pending = [tree.root_node]
-        kinds = {
-            "class_declaration",
-            "interface_declaration",
-            "method_declaration",
-            "constructor_declaration",
-            "enum_declaration",
-            "property_declaration",
-        }
-        while pending:
-            node = pending.pop()
-            if node.type in kinds:
-                name = node.child_by_field_name("name")
-                if name:
-                    symbols.append(
-                        {
-                            "name": name.text.decode(),
-                            "kind": node.type,
-                            "line": node.start_point.row + 1,
-                            "end_line": node.end_point.row + 1,
-                        }
-                    )
-            pending.extend(reversed(node.children))
-        return {
-            "symbols": symbols,
-            "version": source["version"],
-            "has_syntax_errors": tree.root_node.has_error,
-        }
+        return PythonAnalysis(self).symbols(path)

@@ -107,7 +107,7 @@ def test_other_account_cannot_read_write_export_or_reuse_cached_services(owned):
         ("POST", thread + "/runs", {"content": "越权"}),
         ("GET", prefix + "/memories", None),
         ("GET", prefix + "/source-options", None),
-        ("GET", prefix + "/file?path=Program.cs", None),
+        ("GET", prefix + "/file?path=Program.py", None),
         ("GET", project + "/materials", None),
         ("GET", f"/api/projects/search-threads?project_id={first['id']}", None),
     ]
@@ -211,7 +211,7 @@ def test_project_materials_memories_and_original_sources_cannot_cross_accounts(
     client, app, _, _, first, _, run = owned
     private_root = tmp_path / "private-source"
     private_root.mkdir()
-    (private_root / "Program.cs").write_text("class PrivateSource {}", encoding="utf-8")
+    (private_root / "Program.py").write_text("class PrivateSource {}", encoding="utf-8")
     private_source = Workspace(private_root)
     sign_in(client, "admin")
     assert (
@@ -222,10 +222,10 @@ def test_project_materials_memories_and_original_sources_cannot_cross_accounts(
     )
     sign_in(client, "user")
     prefix = f"/api/p/{first['id']}"
-    assert client.get(prefix + "/file?path=Program.cs").status_code == 200
+    assert client.get(prefix + "/file?path=Program.py").status_code == 200
     with app.state.auth.database.session.begin() as session:
         session.get(Message, run["message_id"]).source_workspace_id = private_source.source_id
-    source = f"/api/sources/{private_source.source_id}/file?path=Program.cs"
+    source = f"/api/sources/{private_source.source_id}/file?path=Program.py"
     assert client.get(source).status_code == 200
     material = client.post(
         f"/api/projects/{first['id']}/materials",

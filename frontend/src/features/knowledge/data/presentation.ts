@@ -1,6 +1,3 @@
-// 本文件为兼容性重建（原文件因 .gitignore 的 data/ 规则未随仓库分发），数据来源为 frontend/src/features/knowledge/reviews/*.ts 的 guide.topic 与 guide.diagrams（专题 id 与已复核绑定的图谱）；architecture 专题取自 resources/knowledge/flows/flowchart-catalog.html 中 data-group="architecture" 的条目，无法重建的部分留空，不得当作原始人工复核语料。
-// 原文件的人工撰写文案（title / summary / purpose / conditions / exceptions）无法从现有资源忠实重建，全部留空。
-// 专题顺序按 sourceGuides.ts 的数组顺序，architecture 置首（与展示页“从系统全局到生产”的入口一致；原顺序不可考）。
 export interface PresentationTopic {
   id: string;
   title: string;
@@ -11,105 +8,17 @@ export interface PresentationTopic {
   diagrams: string[];
 }
 
-// 文案没有可追溯来源，统一留空，避免把重建数据当成人工复核结论。
+// 当前仓库只保留一个经人工核对源码范围的专题；其余专题等待逐条复核后再加入。
 export const presentationTopics: PresentationTopic[] = [
   {
-    "id": "architecture",
-    "title": "",
-    "summary": "",
-    "purpose": "",
-    "conditions": [],
-    "exceptions": [],
-    "diagrams": [
-      "framework-runtime-architecture",
-      "zx2200-architecture"
-    ]
+    id: 'architecture',
+    title: 'SWE-agent 架构与运行流程',
+    summary: '从命令行入口到单实例运行、Agent 步进循环和工具边界的静态阅读。',
+    purpose: '帮助定位 SWE-agent 的主要执行入口、循环终止条件和工具调用边界。',
+    conditions: ['以只读方式阅读 trunk 中的源码快照'],
+    exceptions: ['不覆盖模型后端、容器环境和运行时行为'],
+    diagrams: [],
   },
-  {
-    "id": "startup",
-    "title": "",
-    "summary": "",
-    "purpose": "",
-    "conditions": [],
-    "exceptions": [],
-    "diagrams": [
-      "startup-workflow",
-      "machine-start-readiness-workflow"
-    ]
-  },
-  {
-    "id": "recovery",
-    "title": "",
-    "summary": "",
-    "purpose": "",
-    "conditions": [],
-    "exceptions": [],
-    "diagrams": [
-      "failure-recovery-workflow",
-      "stop-cleanup-workflow"
-    ]
-  },
-  {
-    "id": "transport",
-    "title": "",
-    "summary": "",
-    "purpose": "",
-    "conditions": [],
-    "exceptions": [],
-    "diagrams": [
-      "transport-workflow",
-      "transport-pause-stop-workflow",
-      "transport-start-gating-workflow",
-      "bin-failure-handshake-sequence"
-    ]
-  },
-  {
-    "id": "s1",
-    "title": "",
-    "summary": "",
-    "purpose": "",
-    "conditions": [],
-    "exceptions": [],
-    "diagrams": [
-      "dispense-workflow",
-      "s1-step-commit-gate-workflow",
-      "s1-return-gates-workflow",
-      "s1-segment-interaction-workflow",
-      "s1-defect-outcome-workflow",
-      "s1-rework-context-workflow"
-    ]
-  },
-  {
-    "id": "s2",
-    "title": "",
-    "summary": "",
-    "purpose": "",
-    "conditions": [],
-    "exceptions": [],
-    "diagrams": [
-      "bonding-workflow",
-      "pickup-workflow",
-      "bond-action-workflow",
-      "s2-task-entry-boundary-workflow",
-      "relative-bond-order-workflow",
-      "s2-action-boundary-workflow"
-    ]
-  },
-  {
-    "id": "wafer",
-    "title": "",
-    "summary": "",
-    "purpose": "",
-    "conditions": [],
-    "exceptions": [],
-    "diagrams": [
-      "wafer-supply-workflow",
-      "wafer-search-gate-workflow",
-      "wafer-change-retry-workflow",
-      "wafer-pick-handshake-sequence",
-      "wafer-vision-outcome-workflow"
-    ]
-  }
 ];
 
 const topicByDiagram = new Map<string, PresentationTopic>();

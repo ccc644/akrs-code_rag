@@ -17,7 +17,7 @@ test('知识资源解析保留公开地址，并拒绝越界路径', () => {
   }
 });
 
-test('开发资源服务返回原始图谱和索引，未知资源与业务请求分别处理', async (t) => {
+test('开发资源服务返回索引与生成资料，未知资源与业务请求分别处理', async (t) => {
   const server = createServer((request, response) =>
     knowledgeMiddleware(request, response, () => {
       response.statusCode = 418;
@@ -31,10 +31,7 @@ test('开发资源服务返回原始图谱和索引，未知资源与业务请�
     return new Promise((done) => server.close(done));
   });
   const base = `http://127.0.0.1:${server.address().port}`;
-  for (const path of [
-    '/archify/machine-start-readiness-workflow.html',
-    '/engineering/manifest.json',
-  ]) {
+  for (const path of ['/engineering/manifest.json', '/agent-knowledge.json']) {
     const response = await fetch(base + path);
     assert.equal(response.status, 200);
     assert.deepEqual(

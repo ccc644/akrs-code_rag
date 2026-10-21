@@ -160,7 +160,7 @@ def test_multiple_roots_paths_evidence_and_detachment(services, tmp_path):
     paths = services[0]
     other = tmp_path / "interfaces"
     other.mkdir()
-    (other / "Program.cs").write_text(
+    (other / "Program.py").write_text(
         "class Secondary {\n static void Main() {}\n}\n", encoding="utf-8"
     )
     app = create_app(paths)
@@ -173,20 +173,20 @@ def test_multiple_roots_paths_evidence_and_detachment(services, tmp_path):
         entries = client.get(scoped + "/files").json()
         prefix = "@sources/" + folder["source_id"] + "/"
         assert entries[0]["name"] == "设备接口"
-        source = client.get(scoped + "/file", params={"path": prefix + "Program.cs"}).json()
+        source = client.get(scoped + "/file", params={"path": prefix + "Program.py"}).json()
         assert "Secondary" in source["content"]
         assert source["source_workspace_id"] == folder["source_id"]
-        assert "Program {" in client.get(scoped + "/file?path=Program.cs").json()["content"]
+        assert "class Program:" in client.get(scoped + "/file?path=Program.py").json()["content"]
         search = client.get(scoped + "/search?query=Main").json()["matches"]
-        assert {row["path"] for row in search} == {"Program.cs", prefix + "Program.cs"}
+        assert {row["path"] for row in search} == {"Program.py", prefix + "Program.py"}
         workspace = app.state.projects.services(saved["id"]).workspace
         evidence = SourceEvidence(workspace, lambda *_: None)
-        evidence.record(source_excerpt(workspace, prefix + "Program.cs", 1, 3))
+        evidence.record(source_excerpt(workspace, prefix + "Program.py", 1, 3))
         assert evidence.reads[0]["source_workspace_id"] == folder["source_id"]
-        assert evidence.check(f"[引用](source:{prefix}Program.cs#L1)")["passed"]
+        assert evidence.check(f"[引用](source:{prefix}Program.py#L1)")["passed"]
         assert any(
-            item["path"].endswith(prefix + "Program.cs")
-            for item in SourceBackend(workspace).glob("*.cs").matches
+            item["path"].endswith(prefix + "Program.py")
+            for item in SourceBackend(workspace).glob("*.py").matches
         )
         assert (
             client.get(scoped + "/file", params={"path": prefix + "../outside"}).status_code == 409
@@ -196,13 +196,13 @@ def test_multiple_roots_paths_evidence_and_detachment(services, tmp_path):
             == 200
         )
         assert (
-            client.get(scoped + "/file", params={"path": prefix + "Program.cs"}).status_code == 404
+            client.get(scoped + "/file", params={"path": prefix + "Program.py"}).status_code == 404
         )
         historic = client.get(
-            f"/api/sources/{folder['source_id']}/file", params={"path": prefix + "Program.cs"}
+            f"/api/sources/{folder['source_id']}/file", params={"path": prefix + "Program.py"}
         )
         assert historic.status_code == 200 and "Secondary" in historic.json()["content"]
-        assert (other / "Program.cs").exists()
+        assert (other / "Program.py").exists()
         duplicate = client.patch(
             f"/api/projects/{saved['id']}",
             json={"source_folders": [{"root": str(paths.workspace), "label": "重复"}]},

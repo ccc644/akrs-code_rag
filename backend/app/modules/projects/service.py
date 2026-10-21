@@ -27,7 +27,7 @@ from app.modules.memory.service import MemoryService
 from app.modules.projects.association import associate_repository
 from app.modules.projects.models import Project
 from app.modules.projects.ownership import AccountProjects
-from app.modules.source_analysis.collection import ProjectAnalysis, SourceCollection
+from app.modules.source_analysis.collection import SourceCollection
 from app.modules.source_analysis.models import SourceWorkspace
 from app.modules.source_analysis.workspace import Workspace
 
@@ -84,7 +84,7 @@ class Projects:
                 session.add(
                     Project(
                         id=self.default_id,
-                        name="ZX2200 软件分析",
+                        name="SWE-agent 源码分析",
                         deepwiki_repo=self.base.settings.load().deepwiki_repo,
                         source_root=str(self.base.workspace.root),
                     )
@@ -432,8 +432,6 @@ class Projects:
             memories = MemoryService(paths, self.database, workspace)
             memories.lock = self.base.memories.lock
             runtime = AgentRuntime(paths, self.base.settings, workspace, repository, memories)
-            if folders:
-                runtime.semantic = ProjectAnalysis(workspace)
             if not self.knowledge_available(str(root)):
                 runtime.knowledge.path = paths.data / "unconfigured-project-knowledge.json"
             runs = RunManager(repository, runtime, self.base.settings)
@@ -502,4 +500,3 @@ class Projects:
             id(item): item for item in [self.base, *self.contexts.values(), *self.retired]
         }.values():
             await services.runs.shutdown()
-            services.runtime.semantic.close()
